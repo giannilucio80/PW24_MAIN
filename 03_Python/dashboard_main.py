@@ -11,7 +11,6 @@ st.set_page_config(page_title="PW24 - MAIN S.p.A.", page_icon="📊", layout="wi
 PERCORSO_CSV = Path(__file__).resolve().parent.parent / "02_Dati" / "domanda_mensile_simulata.csv"
 PRODOTTI = ["Foodpack", "Supersoftcare", "Softcare Fast", "Medicare"]
 PESI = (0.20, 0.30, 0.50)
-ALPHA = 0.30
 MESI_VERIFICA = 6
 GIORNI_MESE = 30  # convenzione didattica
 Z_95 = 1.645  # quantile normale unilaterale per livello di servizio 95%
@@ -40,19 +39,15 @@ def carica_dati(percorso):
 
 
 def prevedi(serie):
-    """Quattro previsioni a un passo, usando solo lo storico passato."""
+    """Tre previsioni a un passo, usando solo lo storico passato."""
     y = np.asarray(serie, dtype=float)
     if len(y) < 3:
         raise ValueError("Sono necessari almeno tre mesi di storico.")
-    exp = float(y[0])
-    for valore in y[1:]:
-        exp = ALPHA * float(valore) + (1 - ALPHA) * exp
     x = np.arange(1, len(y) + 1, dtype=float)
     coeff, intercetta = np.polyfit(x, y, 1)
     return {
         "Media mobile semplice": float(np.mean(y[-3:])),
         "Media mobile ponderata": float(np.dot(y[-3:], PESI)),
-        "Smorzamento esponenziale": exp,
         "Regressione lineare": float(coeff * (len(y) + 1) + intercetta),
     }
 
@@ -171,32 +166,4 @@ st.bar_chart(confronto.set_index("Scenario"))
 st.metric("Variazione complessiva della domanda", f"{(domanda_simulata / previsione_scelta - 1) * 100:+.1f}%" if previsione_scelta > 0 else "Non calcolabile (previsione zero)")
 st.caption("Trend e stagionalità sono fattori percentuali di scenario applicati in modo moltiplicativo, non parametri stimati statisticamente in questa sezione.")
 
-st.divider()
-st.header("Gestione delle scorte di magazzino")
-st.write("Il materiale già riservato ai clienti è parte della giacenza fisica, ma non è liberamente disponibile.")
-giacenza_totale = st.number_input("Giacenza totale in magazzino (kg)", min_value=0, max_value=100000, value=15000, step=500)
-materiale_riservato = st.number_input("Materiale riservato ai clienti (kg)", min_value=0, max_value=int(giacenza_totale), value=min(6000, int(giacenza_totale)), step=500)
-giacenza_disponibile = giacenza_totale - materiale_riservato
-c1, c2, c3 = st.columns(3)
-c1.metric("Giacenza totale", f"{giacenza_totale:,.0f} kg")
-c2.metric("Materiale riservato", f"{materiale_riservato:,.0f} kg")
-c3.metric("Giacenza disponibile", f"{giacenza_disponibile:,.0f} kg")
-composizione = pd.DataFrame({"Tipologia": ["Materiale riservato", "Materiale disponibile"],
-                            "Quantità (kg)": [materiale_riservato, giacenza_disponibile]})
-st.subheader("Composizione della giacenza")
-st.bar_chart(composizione.set_index("Tipologia"))
-st.caption("Giacenze simulate. Il materiale riservato è già incluso nella giacenza totale e non va conteggiato due volte.")
-
-st.divider()
-st.header("Verifica indicativa della copertura")
-st.write("Confronto didattico tra disponibilità libera e punto di riordino teorico.")
-differenza_scorte = giacenza_disponibile - punto_riordino
-c1, c2 = st.columns(2)
-c1.metric("Giacenza disponibile", f"{giacenza_disponibile:,.0f} kg")
-c2.metric("Punto di riordino teorico", f"{punto_riordino:,.0f} kg")
-if differenza_scorte < 0:
-    st.warning("ATTENZIONE: la giacenza disponibile è inferiore al punto di riordino teorico.")
-else:
-    st.success("La giacenza disponibile è pari o superiore al punto di riordino teorico.")
-st.metric("Differenza rispetto alla soglia", f"{differenza_scorte:+,.0f} kg")
-st.caption("Indicatore didattico, NON segnale operativo di produzione. In un sistema a punto di riordino si dovrebbe confrontare la soglia con la posizione di magazzino (disponibile + ordini in arrivo − impegni), considerando inoltre pianificazione e date di consegna.")
+st.caption("La simulazione riguarda quantità aggregate per prodotto e non gestisce giacenze attribuite ai singoli clienti. Il punto di riordino è soltanto un riferimento teorico, non una decisione automatica di produzione.")
