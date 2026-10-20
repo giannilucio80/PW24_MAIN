@@ -25,20 +25,18 @@ e non rappresentano informazioni gestionali reali dell'azienda.
 La dashboard consente di:
 
 - Visualizzare l'andamento storico della domanda.
-- Calcolare quattro metodi previsionali.
+- Calcolare tre metodi previsionali.
 - Confrontare l'accuratezza mediante il MAE.
 - Selezionare il metodo con MAE minore.
 - Simulare quattro tipologie di scorte.
 - Modificare lead time e variabilità della domanda.
 - Simulare variazioni tendenziali e stagionali.
-- Distinguere giacenza disponibile e materiale riservato.
-- Confrontare la disponibilità con una soglia teorica di riordino.
-
+- Visualizzare il punto di riordino teorico calcolato in base alla domanda prevista, al tempo di reintegro e alla scorta di sicurezza.
+  
 ## Metodi previsionali
 
 1. Media mobile semplice a tre mesi.
 2. Media mobile ponderata a tre mesi.
-3. Smorzamento esponenziale semplice.
 4. Regressione lineare.
 
 Il MAE viene calcolato sugli ultimi sei mesi
